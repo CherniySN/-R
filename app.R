@@ -8,51 +8,43 @@
 #
 
 library(shiny)
-library(DT)
-
-datafr <- read.csv(file.choose())
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Таблица по упражнениям"),
+    titlePanel("Old Faithful Geyser Data"),
 
     # Sidebar with a slider input for number of bins 
-    fluidRow(column(3, selectInput('type', 'Тип упражнения:', choices = c('All', unique(as.character(datafr$Type))))),
-             column(3, selectInput('bodypart', 'Часть тела:', choices = c('All', unique(as.character(datafr$BodyPart))))),
-             column(3, selectInput('equipment', 'Сопртинвентарь:', choices = c('All', unique(as.character(datafr$Equipment))))),
-               column(3, selectInput('level', 'Уровень спортсмена:', choices = c('All', unique(as.character(datafr$Level))))),
-             ),
+    sidebarLayout(
+        sidebarPanel(
+            sliderInput("bins",
+                        "Number of bins:",
+                        min = 1,
+                        max = 50,
+                        value = 30)
+        ),
 
-        # Отрисовака основного экрана (таблицы)
+        # Show a plot of the generated distribution
         mainPanel(
-           DT::dataTableOutput('table')
+           plotOutput("distPlot")
         )
     )
-
+)
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    output$table <- DT::renderDataTable(DT::datatable({
-      df <- datafr
-      
-      if(input$type != 'All'){
-        df <- df[df$Type == input$type,]
-      }
-      if(input$bodypart != 'All'){
-        df <- df[df$BodyPart == input$bodypart,]
-      }
-      if(input$equipment != 'All'){
-        df <- df[df$Equipment == input$equipment,]
-      }
-      if(input$level != 'All'){
-        df <- df[df$Level == input$level,]
-      }
-      df
-    }))
-    
+    output$distPlot <- renderPlot({
+        # generate bins based on input$bins from ui.R
+        x    <- faithful[, 2]
+        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+
+        # draw the histogram with the specified number of bins
+        hist(x, breaks = bins, col = 'darkgray', border = 'white',
+             xlab = 'Waiting time to next eruption (in mins)',
+             main = 'Histogram of waiting times')
+    })
 }
 
 # Run the application 
